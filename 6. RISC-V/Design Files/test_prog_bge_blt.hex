@@ -1,0 +1,16 @@
+FF600093
+00A00113
+0020C463
+00100293
+0020D463
+00200313
+00100F93
+00000063
+
+//addi x1, x0, -10  # Hex: FF600093
+//addi x2, x0, 10   # Hex: 00A00113
+//blt  x1, x2, Pass1      
+//addi x5, x0, 1          # ERROR FLAG 1 (BLT Failed)
+//Pass1:
+//bge  x2, x1, Finish     
+//addi x6, x0, 2          # ERROR FLAG 2 (BGE Failed)

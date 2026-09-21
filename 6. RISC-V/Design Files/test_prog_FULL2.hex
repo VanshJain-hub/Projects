@@ -1,0 +1,40 @@
+123450B7
+00000117
+01400513
+00A10533
+00050267
+29A00F13
+FFF00293
+00503333
+00429393
+0043D413
+4043D493
+00000063
+
+// # --- PART 1: Upper Immediate & PC Relative ---
+// lui   x1, 0x12345    # x1 = 0x12345000 (Load top 20 bits)
+// auipc x2, 0          # x2 = PC + 0. (If this is line 2, x2 should be 4)
+// 
+// # --- PART 2: Computed Jump (JALR) ---
+// addi  x10, x0, 20    # x10 = 20
+// add   x10, x2, x10   # x10 = PC(4) + 20 = 24. (Target Address)
+// jalr  x4, 0(x10)     # Jump to address in x10 (24). Store Link in x4 (PC+4 = 20).
+// 
+// # --- TRAP ZONE (Should Skip) ---
+// addi  x30, x0, 666   # If x30 becomes 666, JALR failed.
+// 
+// # --- PART 3: Target Zone (Address 24) ---
+// addi  x5, x0, -1     # x5 = 0xFFFFFFFF (-1)
+// 
+// # --- PART 4: Unsigned Comparison ---
+// sltu  x6, x0, x5     # Is 0 < 0xFFFFFFFF (Unsigned)? 
+//                      # YES. x6 should be 1. 
+//                      # (If signed SLT was used, 0 > -1, so it would be 0).
+// 
+// # --- PART 5: Shift Frenzy ---
+// slli  x7, x5, 4      # x7 = 0xFFFFFFFF << 4 = 0xFFFFFFF0
+// srli  x8, x7, 4      # x8 = Logical Right >> 4 = 0x0FFFFFFF (Zero Filled)
+// srai  x9, x7, 4      # x9 = Arithmetic Right >>> 4 = 0xFFFFFFFF (Sign Filled)
+// 
+// # --- END ---
+// beq   x0, x0, Stop   # Infinite Loop

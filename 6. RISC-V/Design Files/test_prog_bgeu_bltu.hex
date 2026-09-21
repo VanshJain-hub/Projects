@@ -1,0 +1,39 @@
+00100093
+FFF00113
+0020E463
+00100293
+00117463
+00100313
+00100F93
+00000063
+
+// --- SETUP ---
+// x1 = 1
+// addi x1, x0, 1       // Hex: 00100093
+00100093
+
+// x2 = -1 (0xFFFFFFFF) -> The largest Unsigned number
+// addi x2, x0, -1      // Hex: FFF00113
+FFF00113
+
+// --- TEST 1: BLTU (Branch Less Than Unsigned) ---
+// Check: Is 1 < 4,294,967,295? (YES).
+// Action: Jump to Test 2. Skip the error trap.
+// bltu x1, x2, 8       // Hex: 0020E463
+0020E463
+// addi x5, x0, 1       // TRAP 1: BLTU Failed!
+00100293
+
+// --- TEST 2: BGEU (Branch Greater Equal Unsigned) ---
+// Check: Is 4,294,967,295 >= 1? (YES).
+// Action: Jump to Finish. Skip the error trap.
+// bgeu x2, x1, 8       // Hex: 00117463
+00117463
+// addi x6, x0, 1       // TRAP 2: BGEU Failed!
+00100313
+
+// --- FINISH ---
+// addi x31, x0, 1      // Success Flag
+00100F93
+// beq  x0, x0, 0       // Infinite Loop
+00000063

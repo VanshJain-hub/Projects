@@ -1,0 +1,56 @@
+00A00093
+00500113
+002081B3
+40208233
+FF600593
+0F006613
+0FF64693
+01067713
+0005A793
+00302023
+00002283
+0AB00313
+006000A3
+00104383
+00518463
+00401803
+
+29A00F13
+0040006F
+00100F93
+00000063
+
+// # --- PART 1: R-Type Setup ---
+// addi x1, x0, 10      # x1 = 10
+// addi x2, x0, 5       # x2 = 5
+// add  x3, x1, x2      # x3 = 10 + 5 = 15
+// sub  x4, x1, x2      # x4 = 10 - 5 = 5
+// 
+// # --- PART 2: I-Type Logic & Arithmetic (NEW) ---
+// addi x11, x0, -10    # x11 = -10 (Testing Negative Immediate)
+// ori  x12, x0, 240    # x12 = 0 OR 240 = 240 (0xF0) -> Testing ORI
+// xori x13, x12, 255   # x13 = 240 XOR 255 = 15 (0x0F) -> Testing XORI
+// andi x14, x12, 16    # x14 = 240 AND 16 = 16 (0x10) -> Testing ANDI
+// slti x15, x11, 0     # x15 = 1 (Is -10 < 0? YES) -> Testing SLTI (Signed)
+// 
+// # --- PART 3: Memory Tests ---
+// sw   x3, 0(x0)       # Store 15 (0x0F) at Address 0
+// lw   x5, 0(x0)       # Load it back. x5 should be 15.
+// addi x6, x0, 171     # x6 = 171 (0xAB)
+// sb   x6, 1(x0)       # Store Byte 0xAB at offset 1. 
+//                      # Memory was 0x0000000F. Now it is 0x0000AB0F.
+// lbu  x7, 1(x0)       # Load Byte Unsigned. x7 should be 171 (0xAB).
+// sh   x18, 4(x0)      # Store half Signed. x18 should be 
+// lh   x16, 4(x0)      # Load half Signed. x16 should be 
+// 
+// # --- PART 4: Branch & Jump ---
+// beq  x3, x5, Pass    # 15 == 15? Yes. Jump to Pass.
+// addi x30, x0, 666    # FAIL FLAG (x30)
+// 
+// Pass:
+// jal  x0, Finish      # Jump to Finish
+// addi x30, x0, 666    # FAIL FLAG
+// 
+// Finish:
+// addi x31, x0, 1      # SUCCESS FLAG (x31 = 1)
+// beq  x0, x0, Finish  # Infinite Loop

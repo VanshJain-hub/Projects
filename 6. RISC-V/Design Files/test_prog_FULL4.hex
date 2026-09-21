@@ -1,0 +1,147 @@
+00A00093
+00500113
+002081B3
+40208233
+FF600593
+0F006613
+0FF64693
+01067713
+0005A793
+00302023
+00002283
+0AB00313
+006000A3
+00104383
+FFF00913
+00100993
+01201223
+00401803
+00405883
+01399A33
+01392AB3
+01395B33
+41395BB3
+01394C33
+01391463
+00100F13
+01394463
+00200F13
+0129D463
+00300F13
+01296463
+00400F13
+01397463
+00500F13
+00800CEF
+00600F13
+00000D17
+00CD0DE7
+00700F13
+00100F93
+00000063
+
+
+// # --- Basic R-Type ---
+// addi x1, x0, 10      # x1 = 10
+// addi x2, x0, 5       # x2 = 5
+// add  x3, x1, x2      # x3 = 15
+// sub  x4, x1, x2      # x4 = 5
+//
+// # --- I-Type Logic ---
+// addi x11, x0, -10    # x11 = -10 (0xFFFFFFF6)
+// ori  x12, x0, 240    # x12 = 240 (0xF0)
+// xori x13, x12, 255   # x13 = 15  (0x0F)
+// andi x14, x12, 16    # x14 = 16  (0x10)
+// slti x15, x11, 0     # x15 = 1   (True: -10 < 0)
+//
+// # --- Word/Byte Memory ---
+// sw   x3, 0(x0)       # Mem[0] = 15
+// lw   x5, 0(x0)       # x5 = 15
+// addi x6, x0, 171     # x6 = 171 (0xAB)
+// sb   x6, 1(x0)       # Mem[1] = 0xAB. Word becomes 0x0000AB0F.
+// lbu  x7, 1(x0)       # x7 = 171 (0xAB)
+//
+// # --- Setup New Registers for further testing of Half-word memory and R-Type tests---
+// addi x18, x0, -1     # x18 = -1 (0xFFFFFFFF)
+// addi x19, x0, 1      # x19 = 1
+//
+// # --- Half-Word Memory Tests ---
+// sh   x18, 4(x0)      # Mem[4] = 0xFFFF (Store Half at next word)
+// lh   x16, 4(x0)      # x16 = -1 (Load Half Signed: 0xFFFF -> 0xFFFFFFFF) 
+// lhu  x17, 4(x0)      # x17 = 65535 (Load Half Unsigned: 0xFFFF -> 0x0000FFFF) 
+//
+// # --- R-Type Logic Tests ---
+// sll  x20, x19, x19   # x20 = 1 << 1 = 2 
+// slt  x21, x18, x19   # x21 = 1 (Is -1 < 1? Yes) 
+// sra  x23, x18, x19   # x23 = -1 >>> 1 = -1 (Arithmetic Shift preserves sign) 
+// xor  x24, x18, x19   # x24 = -2 (0xFF...FF ^ 1 = 0xFF...FE) 
+//
+// # --- Branch Gauntlet ---
+// # Logic: If a branch works, it jumps OVER the error trap.
+// # If a branch fails, it executes the trap (modifying x30).
+//
+// bne  x18, x19, Pass1 # -1 != 1? Jump to Pass1.
+// addi x30, x0, 1      # TRAP: BNE Failed!
+//
+// Pass1:
+// blt  x18, x19, Pass2 # -1 < 1? Jump to Pass2.
+// addi x30, x0, 2      # TRAP: BLT Failed!
+//
+// Pass2:
+// bltu x19, x18, Pass3 # 1 < -1 (Unsigned Huge)? Jump to Pass3.
+// addi x30, x0, 3      # TRAP: BLTU Failed!
+//
+// Pass3:
+// bge  x19, x18, Pass4 # 1 >= -1? Jump to Pass4.
+// addi x30, x0, 4      # TRAP: BGE Failed!
+//
+//Pass4:
+// bgeu x18, x19, Test_Jumps # Jump to new test section
+// addi x30, x0, 5           # TRAP 5 (BGEU Failed)
+
+// Test_Jumps:
+// # --- TEST 1: JAL (Jump And Link) ---
+// # Jumps forward 8 bytes (skipping the TRAP 6). 
+// # Saves PC+4 into register x25.
+// jal  x25, 8               # Hex: 00800CEF
+// addi x30, x0, 6           # TRAP 6: JAL Failed! (Should be skipped)
+
+// # --- TEST 2: JALR (Jump And Link Register) ---
+// # We use AUIPC to get the current PC, then JALR to jump relative to it.
+// auipc x26, 0              # x26 = Current PC. Hex: 00000D17
+// # Jump to address (x26 + 8). Skips TRAP 7.
+// # Saves PC+4 into register x27.
+// jalr  x27, 8(x26)         # Hex: 008D0D67
+// addi x30, x0, 7           # TRAP 7: JALR Failed! (Should be skipped)
+
+// Final:
+// addi x31, x0, 1           # Success Flag = 1
+// beq  x0, x0, Final        # Infinite Loop
+
+
+
+//1. Half-Word Memory Tests
+
+//regfile[16]: Should be FFFFFFFF (Loaded -1 from half-word, sign-extended).
+
+//regfile[17]: Should be 0000FFFF (Loaded -1 from half-word, zero-extended).
+
+//2. R-Type Logic Tests
+
+//regfile[20] (SLL): 00000002 (1 shifted left by 1).
+
+//regfile[21] (SLT): 00000001 (-1 is less than 1).
+
+//regfile[23] (SRA): FFFFFFFF (-1 arithmetic shifted right is still -1).
+
+//regfile[24] (XOR): FFFFFFFE (-1 XOR 1).
+
+//regfile[25] should hold an address (non-zero). This proves JAL linked the return address.
+
+//regfile[27] should hold an address (non-zero). This proves JALR linked the return address.
+
+//3. Branch Gauntlet
+
+//regfile[30]: Must be 0. (If it's 6,7, a jump failed).
+
+//regfile[31]: Must be 1. (Success!).
